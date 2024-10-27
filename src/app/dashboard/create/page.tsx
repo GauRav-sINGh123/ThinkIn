@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Wand2 } from 'lucide-react'
-
+'use client'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
