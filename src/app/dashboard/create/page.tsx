@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { useState, useEffect } from 'react';
 import { Wand2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { blogSchema, validateFile } from '@/app/store/blogSchema';  
-import { useBlogStore } from '@/app/store/blogStore';
+import { blogSchema, validateFile } from '@/store/blogSchema';  
+import { useBlogStore } from '@/store/blogStore';
+import useDebounce from '@/utility/useDebounce';  
 
 interface BlogData {
   title: string;
@@ -37,7 +38,15 @@ export default function BlogPostCreator() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false); 
   const [errors, setErrors] = useState<{ title?: string; category?: string; content?: string; file?: string }>({});
   const categories = ['Technology', 'Design', 'Artificial Intelligence', 'Business', 'Entertainment', 'Art', 'Travel', 'Food', 'Lifestyle', 'Other'];
-  
+   
+  const debouncedTitle = useDebounce(data.title, 300);  
+  const debouncedContent = useDebounce(data.content, 300);  
+
+  useEffect(() => {
+   
+    setBlogData({ title: debouncedTitle, content: debouncedContent });
+  }, [debouncedTitle, debouncedContent, setBlogData]);
+
   useEffect(() => {
     setData({
       title: blogData.title || '',
@@ -49,7 +58,6 @@ export default function BlogPostCreator() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setData((prevData) => ({ ...prevData, [id]: value }));  
-    setBlogData({ [id]: value }); 
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,7 +181,7 @@ export default function BlogPostCreator() {
                 id="content"
                 placeholder="Write your blog post content here"
                 rows={10}
-                value={data.content} // Use local state
+                value={data.content} 
                 onChange={handleChange}
               />
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
