@@ -1,5 +1,5 @@
-'use client';
-import { useState } from 'react';
+'use client'
+import { useState, useEffect } from 'react';
 import { Wand2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { blogSchema, validateFile } from '@/app/store/blogSchema';  
+import { useBlogStore } from '@/app/store/blogStore';
 
 interface BlogData {
   title: string;
@@ -27,19 +28,28 @@ export default function BlogPostCreator() {
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [blogData, setBlogData] = useState<BlogData>({
-    title: '',
-    category: '',
-    content: '',
+  const { blogData, setBlogData } = useBlogStore();  
+  const [data, setData] = useState<BlogData>({
+    title: blogData.title || '',
+    category: blogData.category || '',
+    content: blogData.content || '',
   });
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false); 
   const [errors, setErrors] = useState<{ title?: string; category?: string; content?: string; file?: string }>({});
-
   const categories = ['Technology', 'Design', 'Artificial Intelligence', 'Business', 'Entertainment', 'Art', 'Travel', 'Food', 'Lifestyle', 'Other'];
+  
+  useEffect(() => {
+    setData({
+      title: blogData.title || '',
+      category: blogData.category || '',
+      content: blogData.content || '',
+    });
+  }, [blogData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setBlogData({ ...blogData, [id]: value });
+    setData((prevData) => ({ ...prevData, [id]: value }));  
+    setBlogData({ [id]: value }); 
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,11 +66,12 @@ export default function BlogPostCreator() {
   };
 
   const handleCategorySelect = (value: string) => {
-    setBlogData({ ...blogData, category: value });
+    setData((prevData) => ({ ...prevData, category: value }));  
+    setBlogData({ category: value });  
   };
 
   const handleSubmit = () => {
-    const validationResult = blogSchema.safeParse(blogData);
+    const validationResult = blogSchema.safeParse(data);
     const fileError = file ? validateFile(file) : false;
 
     if (!validationResult.success || !fileError) {
@@ -76,14 +87,15 @@ export default function BlogPostCreator() {
       }
       setErrors(formErrors);
     } else {
-      console.log("Blog Data is valid:", blogData);
+      console.log("Blog Data is valid:", data);
       console.log("Selected file:", file);
     }
   };
 
   const handleGenerateContent = () => {
     const generatedContent = "This is a generated content based on your prompt."; 
-    setBlogData({ ...blogData, content: generatedContent });
+    setData((prevData) => ({ ...prevData, content: generatedContent })); 
+    setBlogData({ content: generatedContent });  
     setIsModalOpen(false); 
   };
 
@@ -99,6 +111,7 @@ export default function BlogPostCreator() {
             <Input
               id="title"
               placeholder="Enter your blog post title"
+              value={data.title}  
               onChange={handleChange}
             />
             {errors.title && <p className="text-red-500">{errors.title}</p>}
@@ -129,7 +142,7 @@ export default function BlogPostCreator() {
             ) : (
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select onValueChange={handleCategorySelect}>
+                <Select onValueChange={handleCategorySelect} value={data.category}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -160,7 +173,7 @@ export default function BlogPostCreator() {
                 id="content"
                 placeholder="Write your blog post content here"
                 rows={10}
-                value={blogData.content}  
+                value={data.content} // Use local state
                 onChange={handleChange}
               />
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
